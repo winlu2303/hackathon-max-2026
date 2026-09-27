@@ -37,7 +37,7 @@ oracleJdk-27.jdk/
 *.jmod
 *.jmods/
 
-# Python venv (у тебя venv/ — обязательно)
+# Python venv
 venv/
 .venv/
 __pycache__/
