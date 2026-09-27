@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- ===== ФОН: диагональный градиент ===== -->
+    <linearGradient id="bg" gradientUnits="userSpaceOnUse" x1="0" y1="512" x2="512" y2="0">
+      <stop offset="0%" stop-color="#3BB8F0"/>
+      <stop offset="38%" stop-color="#2A6BF2"/>
+      <stop offset="70%" stop-color="#4A3FD9"/>
+      <stop offset="100%" stop-color="#8B2FD9"/>
+    </linearGradient>
+
+    <!-- ===== СТЕКЛО: верхний frosted-слой ===== -->
+    <linearGradient id="glassSheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.32"/>
+      <stop offset="42%" stop-color="#FFFFFF" stop-opacity="0.05"/>
+      <stop offset="75%" stop-color="#FFFFFF" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.20"/>
+    </linearGradient>
+
+    <!-- ===== Specular-подсветка верхней кромки ===== -->
+    <linearGradient id="topSpec" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- ===== Нижний мягкий отблеск / линза ===== -->
+    <radialGradient id="bottomLens" cx="50%" cy="100%" r="70%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.38"/>
+      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- ===== Внутренний glow по центру ===== -->
+    <radialGradient id="innerGlow" cx="50%" cy="34%" r="72%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.22"/>
+      <stop offset="65%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- ===== Caustics: преломлённый свет снизу-слева ===== -->
+    <radialGradient id="causticCyan" cx="28%" cy="76%" r="46%">
+      <stop offset="0%" stop-color="#9BE9FF" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#9BE9FF" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- ===== Caustics: преломлённый свет сверху-справа ===== -->
+    <radialGradient id="causticViolet" cx="76%" cy="26%" r="42%">
+      <stop offset="0%" stop-color="#E3B4FF" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#E3B4FF" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- ===== Фильтры размытия ===== -->
+    <filter id="blurSoft" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <filter id="blurMed" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="28"/>
+    </filter>
+    <filter id="blurHeavy" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="42"/>
+    </filter>
+
+    <!-- ===== Символ: дом с вырезанной галочкой ===== -->
+    <mask id="houseMask">
+      <rect width="512" height="512" fill="#000"/>
+      <!-- Силуэт дома -->
+      <path fill="#fff" d="M256 120                L392 232                L392 384                Q392 400 376 400                L136 400                Q120 400 120 384                L120 232                Z"/>
+      <!-- Галочка (negative space) -->
+      <path fill="none" stroke="#000" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" d="M188 292 L232 336 L324 240"/>
+    </mask>
+
+    <!-- ===== Скругление иконки ===== -->
+    <clipPath id="rounded">
+      <rect width="512" height="512" rx="114" ry="114"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#rounded)">
+
+    <!-- 1. Базовый градиент -->
+    <rect width="512" height="512" fill="url(#bg)"/>
+
+    <!-- 2. Мягкие цветовые блобы под стеклом (глубина) -->
+    <circle cx="140" cy="392" r="150" fill="#3BB8F0" opacity="0.55" filter="url(#blurMed)"/>
+    <circle cx="392" cy="128" r="160" fill="#8B2FD9" opacity="0.55" filter="url(#blurMed)"/>
+
+    <!-- 3. Белый силуэт дома с вырезанной галочкой -->
+    <rect width="512" height="512" fill="#FFFFFF" mask="url(#houseMask)"/>
+
+    <!-- 4. Лёгкий светящийся контур вокруг дома (refraction halo) -->
+    <rect width="512" height="512" fill="#FFFFFF" mask="url(#houseMask)" opacity="0.35" filter="url(#blurMed)"/>
+
+    <!-- 5. Frosted glass слой -->
+    <rect width="512" height="512" fill="url(#glassSheen)"/>
+
+    <!-- 6. Внутренний центральный glow -->
+    <rect width="512" height="512" fill="url(#innerGlow)"/>
+
+    <!-- 7. Caustic-отблески (преломлённый свет) -->
+    <ellipse cx="150" cy="400" rx="210" ry="130" fill="url(#causticCyan)" filter="url(#blurHeavy)"/>
+    <ellipse cx="392" cy="120" rx="200" ry="120" fill="url(#causticViolet)" filter="url(#blurHeavy)"/>
+
+    <!-- 8. Specular highlight по верхней кромке -->
+    <path d="M70 130 Q256 32 442 130" stroke="url(#topSpec)" stroke-width="6" fill="none" opacity="0.9" filter="url(#blurSoft)"/>
+    <rect x="0" y="0" width="512" height="170" fill="url(#topSpec)" opacity="0.30"/>
+
+    <!-- 9. Нижний мягкий отблеск (lens) -->
+    <ellipse cx="256" cy="500" rx="290" ry="110" fill="url(#bottomLens)" filter="url(#blurSoft)"/>
+
+    <!-- 10. Хроматическая аберрация (hint): cyan + violet фринги по дуге -->
+    <path d="M116 122 Q256 26 396 122" stroke="#3BB8F0" stroke-width="3" fill="none" opacity="0.6" filter="url(#blurSoft)"/>
+    <path d="M122 128 Q256 34 402 128" stroke="#8B2FD9" stroke-width="3" fill="none" opacity="0.5" filter="url(#blurSoft)"/>
+
+    <!-- 11. Стеклянный rim: тонкая белая обводка по краю -->
+    <rect x="3" y="3" width="506" height="506" rx="112" ry="112" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.55"/>
+    <rect x="7" y="7" width="498" height="498" rx="108" ry="108" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.30"/>
+
+    <!-- 12. Тёмный тонкий rim снизу — «линза» стекла -->
+    <path d="M40 452 Q256 512 472 452" stroke="#1E1B4B" stroke-width="3" fill="none" opacity="0.18" filter="url(#blurSoft)"/>
+  </g>
+</svg>

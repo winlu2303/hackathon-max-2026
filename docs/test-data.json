@@ -1,0 +1,20 @@
+{
+  "note": "Модельные данные. Реальные дома и жители не используются.",
+  "buildings": [
+    { "id": 1, "address": "г. Казань, ул. Баумана, д. 15", "fiasId": "16-77-010101-123", "ukName": "ООО «УК Пример»" }
+  ],
+  "testRoles": {
+    "resident":   { "description": "Житель дома 1, кв. 42",     "buildingId": 1, "role": "RESIDENT" },
+    "dispatcher": { "description": "Диспетчер аварийной службы", "buildingId": 1, "role": "DISPATCHER" },
+    "master":     { "description": "Сантехник",                  "buildingId": 1, "role": "MASTER" }
+  },
+  "expectedScenario": [
+    "POST /emergency (resident) → 201, status=SENT",
+    "GET  /emergency/{id} → 200, status=SENT",
+    "POST /emergency/{id}/ack (dispatcher) → 200, status=ACK",
+    "POST /requests (resident) → 201, status=SUBMITTED",
+    "GET  /requests/{id} → 200, status=SUBMITTED",
+    "DELETE /emergency/{id} (dispatcher) → 204",
+    "DELETE /requests/{id} (dispatcher) → 204"
+  ]
+}

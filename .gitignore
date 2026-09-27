@@ -1,0 +1,44 @@
+# Секреты
+.env
+*.env
+!.env.example
+
+# Java
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# Go
+go-gateway/go-gateway
+go-gateway/bin/
+
+# Node
+node_modules/
+mini-app/dist/
+mini-app/build/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+pg_data/
+
+oracleJdk-27.jdk/
+*.jdk/
+**/modules
+*.jmod
+*.jmods/
+
+# Python venv (у тебя venv/ — обязательно)
+venv/
+.venv/
+__pycache__/
+*.pyc

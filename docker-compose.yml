@@ -1,0 +1,84 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  nats:
+    image: nats:2.10-alpine
+    restart: unless-stopped
+    command: ["-js", "-m", "8222"]
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+
+  go-gateway:
+    build:
+      context: ./go-gateway
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      MAX_WEBHOOK_SECRET: ${MAX_WEBHOOK_SECRET}
+      NATS_URL: ${NATS_URL}
+      PORT: ${GATEWAY_PORT}
+    ports:
+      - "${GATEWAY_PORT}:8080"
+    depends_on:
+      - nats
+
+  java-core:
+    build:
+      context: ./java-core
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    dns:
+       - 8.8.8.8
+       - 1.1.1.1
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_REDIS_HOST: ${REDIS_HOST}
+      SPRING_REDIS_PORT: ${REDIS_PORT}
+      NATS_URL: ${NATS_URL}
+      MAX_BOT_TOKEN: ${MAX_BOT_TOKEN}
+      MAX_API_URL: ${MAX_API_URL}
+      API_BASE_URL: ${API_BASE_URL}
+      TEST_RESIDENT_TOKEN: ${TEST_RESIDENT_TOKEN}
+      TEST_DISPATCHER_TOKEN: ${TEST_DISPATCHER_TOKEN}
+      TEST_MASTER_TOKEN: ${TEST_MASTER_TOKEN}
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+      JAVA_TOOL_OPTIONS: "-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8"
+    ports:
+      - "${API_PORT}:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      nats:
+        condition: service_started
+
+volumes:
+  pg_data:

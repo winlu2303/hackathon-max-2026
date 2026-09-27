@@ -1,0 +1,196 @@
+schemaVersion: "1.0"
+
+solution:
+  name: "Дом в Порядке"
+  teamId: "dom-v-poryadke"
+
+api:
+  baseUrl: "https://tentatively-teaching-saury.cloudpub.ru/api/v1"
+  openapi: "./openapi.yaml"
+  defaultHeaders:
+    Accept: "application/json"
+
+checks:
+  - id: "health"
+    name: "API доступен"
+    description: "Базовая проверка доступности"
+    method: "GET"
+    path: "/health"
+    role: "public"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+      requiredFields:
+        - "status"
+    timeoutMs: 5000
+    repeatable: true
+
+  - id: "list-buildings"
+    name: "Список домов"
+    description: "Публичный справочник домов"
+    method: "GET"
+    path: "/buildings"
+    role: "public"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+    timeoutMs: 5000
+    repeatable: true
+
+  - id: "create-emergency"
+    name: "Создание аварийного сигнала"
+    description: "Житель отправляет аварийный сигнал"
+    method: "POST"
+    path: "/emergency"
+    role: "resident"
+    request:
+      headers:
+        Content-Type: "application/json"
+      body:
+        type: "FLOOD"
+        buildingId: 1
+        description: "Тестовый сигнал из автоматической проверки"
+    expected:
+      statusCodes: [201]
+      contentType: "application/json"
+      requiredFields:
+        - "id"
+        - "type"
+        - "status"
+        - "createdAt"
+      bodySchema:
+        type: "object"
+        required: ["id", "type", "status"]
+        properties:
+          id:
+            type: "integer"
+          type:
+            type: "string"
+          status:
+            type: "string"
+    timeoutMs: 5000
+    repeatable: false
+    extract:
+      emergencyId: "$.id"
+
+  - id: "get-emergency"
+    name: "Получение статуса аварии"
+    description: "Житель проверяет статус своего сигнала"
+    method: "GET"
+    path: "/emergency/{emergencyId}"
+    role: "resident"
+    dependsOn:
+      - "create-emergency"
+    request:
+      path:
+        emergencyId: "${emergencyId}"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+      requiredFields:
+        - "id"
+        - "status"
+    timeoutMs: 5000
+    repeatable: true
+
+  - id: "ack-emergency"
+    name: "Диспетчер принял сигнал"
+    description: "Диспетчер подтверждает получение сигнала"
+    method: "POST"
+    path: "/emergency/{emergencyId}/ack"
+    role: "dispatcher"
+    dependsOn:
+      - "create-emergency"
+    request:
+      path:
+        emergencyId: "${emergencyId}"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+      requiredFields:
+        - "id"
+        - "status"
+        - "ackAt"
+    timeoutMs: 5000
+    repeatable: false
+
+  - id: "create-request"
+    name: "Создание заявки на мастера"
+    description: "Житель вызывает мастера"
+    method: "POST"
+    path: "/requests"
+    role: "resident"
+    request:
+      headers:
+        Content-Type: "application/json"
+      body:
+        category: "PLUMBING"
+        subtype: "leaky_faucet"
+        buildingId: 1
+        preferredTime: "today"
+    expected:
+      statusCodes: [201]
+      contentType: "application/json"
+      requiredFields:
+        - "id"
+        - "category"
+        - "status"
+        - "createdAt"
+      bodySchema:
+        type: "object"
+        required: ["id", "category", "status"]
+        properties:
+          id:
+            type: "integer"
+          category:
+            type: "string"
+          status:
+            type: "string"
+    timeoutMs: 5000
+    repeatable: false
+    extract:
+      requestId: "$.id"
+
+  - id: "get-request"
+    name: "Получение заявки"
+    description: "Житель проверяет статус заявки"
+    method: "GET"
+    path: "/requests/{requestId}"
+    role: "resident"
+    dependsOn:
+      - "create-request"
+    request:
+      path:
+        requestId: "${requestId}"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+      requiredFields:
+        - "id"
+        - "category"
+        - "status"
+    timeoutMs: 5000
+    repeatable: true
+
+cleanup:
+  - id: "delete-emergency"
+    method: "DELETE"
+    path: "/emergency/{emergencyId}"
+    role: "dispatcher"
+    request:
+      path:
+        emergencyId: "${emergencyId}"
+    expected:
+      statusCodes: [204, 404]
+    timeoutMs: 5000
+
+  - id: "delete-request"
+    method: "DELETE"
+    path: "/requests/{requestId}"
+    role: "dispatcher"
+    request:
+      path:
+        requestId: "${requestId}"
+    expected:
+      statusCodes: [204, 404]
+    timeoutMs: 5000

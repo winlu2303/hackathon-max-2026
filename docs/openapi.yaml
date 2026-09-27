@@ -1,0 +1,265 @@
+openapi: 3.1.0
+info:
+  title: Дом в Порядке API
+  version: 1.0.0
+  description: API для управления домом — аварийные сигналы и заявки на мастера
+servers:
+  - url: https://tentatively-teaching-saury.cloudpub.ru/api/v1
+paths:
+  /health:
+    get:
+      summary: Healthcheck
+      operationId: health
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /buildings:
+    get:
+      summary: Список домов
+      operationId: listBuildings
+      responses:
+        '200':
+          description: Список домов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Building'
+
+  /emergency:
+    post:
+      summary: Создать аварийный сигнал
+      operationId: createEmergency
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmergencyCreate'
+      responses:
+        '201':
+          description: Создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Emergency'
+        '400':
+          description: Невалидные данные
+        '401':
+          description: Не авторизован
+
+  /emergency/{emergencyId}:
+    get:
+      summary: Получить статус аварии
+      operationId: getEmergency
+      parameters:
+        - in: path
+          name: emergencyId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Статус
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Emergency'
+        '404':
+          description: Не найдено
+    delete:
+      summary: Удалить аварию (cleanup)
+      operationId: deleteEmergency
+      parameters:
+        - in: path
+          name: emergencyId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Удалено
+        '404':
+          description: Уже отсутствует
+
+  /emergency/{emergencyId}/ack:
+    post:
+      summary: Диспетчер принял сигнал
+      operationId: ackEmergency
+      parameters:
+        - in: path
+          name: emergencyId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Принято
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Emergency'
+        '404':
+          description: Не найдено
+
+  /requests:
+    post:
+      summary: Создать заявку на мастера
+      operationId: createRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceRequestCreate'
+      responses:
+        '201':
+          description: Создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceRequest'
+
+  /requests/{requestId}:
+    get:
+      summary: Получить заявку
+      operationId: getRequest
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Заявка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceRequest'
+    delete:
+      summary: Удалить заявку (cleanup)
+      operationId: deleteRequest
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Удалено
+        '404':
+          description: Уже отсутствует
+
+components:
+  schemas:
+    Building:
+      type: object
+      required: [id, address]
+      properties:
+        id:
+          type: integer
+        address:
+          type: string
+        fiasId:
+          type: string
+        ukName:
+          type: string
+
+    EmergencyCreate:
+      type: object
+      required: [type, buildingId]
+      properties:
+        type:
+          type: string
+          enum: [FLOOD, FIRE, POWER, BLOCKED]
+        buildingId:
+          type: integer
+        description:
+          type: string
+          maxLength: 500
+
+    Emergency:
+      type: object
+      required: [id, type, status, buildingId, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        status:
+          type: string
+          enum: [SENT, ACK, DISPATCHED, RESOLVED]
+        buildingId:
+          type: integer
+        userId:
+          type: integer
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        ackAt:
+          type: string
+          format: date-time
+          nullable: true
+        dispatchedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    ServiceRequestCreate:
+      type: object
+      required: [category, buildingId]
+      properties:
+        category:
+          type: string
+          enum: [PLUMBING, ELECTRIC, REPAIR]
+        subtype:
+          type: string
+        buildingId:
+          type: integer
+        preferredTime:
+          type: string
+        description:
+          type: string
+
+    ServiceRequest:
+      type: object
+      required: [id, category, status, buildingId, createdAt]
+      properties:
+        id:
+          type: integer
+        category:
+          type: string
+        subtype:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [SUBMITTED, ASSIGNED, IN_PROGRESS, DONE]
+        buildingId:
+          type: integer
+        userId:
+          type: integer
+          nullable: true
+        masterId:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
